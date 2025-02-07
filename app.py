@@ -2,15 +2,24 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# GitHub raw file URL (Replace with your actual GitHub username & repo)
-csv_url = "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/GovCon-Dashboard/main/ContractOpportunities-20250203-100221.csv"
+# ✅ Use the correct GitHub raw file URL
+csv_url = "https://raw.githubusercontent.com/ryanvanguard/GovCon-Dashboard/main/ContractOpportunities-20250206-115602.csv"
 
 # Load the dataset from GitHub
 @st.cache_data
 def load_data():
-    return pd.read_csv(csv_url, encoding='latin1')
+    try:
+        return pd.read_csv(csv_url, encoding='latin1')
+    except Exception as e:
+        st.error(f"Error loading CSV: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame on failure
 
 data = load_data()
+
+# Check if data is loaded
+if data.empty:
+    st.error("Failed to load data. Please check the file URL or format.")
+    st.stop()
 
 # Convert 'Current Response Date' to datetime
 data["Current Response Date"] = pd.to_datetime(data["Current Response Date"], errors='coerce')
