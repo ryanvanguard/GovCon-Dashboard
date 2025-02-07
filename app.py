@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# ✅ Use the correct GitHub raw file URL
+# ✅ Use the correct GitHub raw URL
 csv_url = "https://raw.githubusercontent.com/ryanvanguard/GovCon-Dashboard/main/ContractOpportunities-20250206-115602.csv"
 
 # Load the dataset from GitHub
@@ -24,13 +24,28 @@ if data.empty:
 # Convert 'Current Response Date' to datetime
 data["Current Response Date"] = pd.to_datetime(data["Current Response Date"], errors='coerce')
 
-# Filter for contract opportunity types
+# ✅ Filter for only the following contract opportunity types
 valid_opportunity_types = ["Sources Sought", "Presolicitation", "Solicitation", "Combined Synopsis/Solicitation"]
 data = data[data["Contract Opportunity Type"].isin(valid_opportunity_types)]
 
-# Filter for only future or today’s response dates
+# ✅ Filter for only future or today’s response dates
 today_date = pd.to_datetime(datetime.today().strftime("%Y-%m-%d"))
 data = data[data["Current Response Date"] >= today_date]
+
+# ✅ Filter for only these specific NAICS codes
+allowed_naics = [
+    "Commercial and Institutional Building Construction",
+    "Surgical and Medical Instrument Manufacturing",
+    "Surgical Appliance and Supplies Manufacturing",
+    "Hazardous Waste Treatment and Disposal",
+    "Couriers and Express Delivery Services",
+    "Testing Laboratories",
+    "Analytical Laboratory Instrument Manufacturing",
+    "Diagnostic Imaging Centers",
+    "Medical Laboratories"
+]
+
+data = data[data["NAICS"].isin(allowed_naics)]  # ✅ Remove contracts that don't match these NAICS codes
 
 # Streamlit App
 st.title("Contract Opportunities Dashboard")
@@ -42,15 +57,15 @@ st.sidebar.header("Filter Options")
 status_options = data["Active/Inactive"].dropna().unique()
 selected_status = st.sidebar.multiselect("Select Status:", status_options, default=status_options)
 
-# NAICS Filter
-naics_options = data["NAICS"].dropna().unique()
+# NAICS Filter (Only shows allowed NAICS codes)
+naics_options = sorted(data["NAICS"].dropna().unique())
 selected_naics = st.sidebar.multiselect("Select NAICS Code:", naics_options, default=naics_options)
 
 # Set-Aside Filter
 set_aside_options = data["Set Aside"].dropna().unique()
 selected_set_aside = st.sidebar.multiselect("Select Set-Aside Type:", set_aside_options, default=set_aside_options)
 
-# Apply filters
+# Apply sidebar filters
 filtered_df = data[
     (data["Active/Inactive"].isin(selected_status)) &
     (data["NAICS"].isin(selected_naics)) &
